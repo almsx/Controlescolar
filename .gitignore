@@ -2,3 +2,7 @@
 config.php
 tmp/
 .DS_Store
+*/__MACOSX/
+*/.DS_Store
+__MACOSX/
+
