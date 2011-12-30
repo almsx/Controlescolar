@@ -1,0 +1,207 @@
+w<?php
+class Conexion  // se declara una clase para hacer la conexion con la base de datos
+{
+	var $con;
+	function Conexion()
+		   	 
+	{
+		// se definen los datos del servidor de base de datos 
+		$conection['server']="localhost";  //host
+		$conection['user']="root";         //  usuario
+		$conection['pass']="buttons";		//password
+		$conection['base']="SistemaCE";			//base de datos
+		
+		
+		// crea la conexion pasandole el servidor , usuario y clave
+		$conect= mysql_pconnect($conection['server'],$conection['user'],$conection['pass']);
+
+
+			
+		if ($conect) // si la conexion fue exitosa , selecciona la base
+		{
+			mysql_select_db($conection['base']);			
+			$this->con=$conect;
+		}
+	}
+	function getConexion() // devuelve la conexion
+	{
+		return $this->con;
+	}
+	function Close()  // cierra la conexion
+	{
+		mysql_close($this->con);
+	}	
+
+}
+
+
+
+
+class sQuery   // se declara una clase para poder ejecutar las consultas, esta clase llama a la clase anterior
+{
+
+	var $pconeccion;
+	var $pconsulta;
+	var $resultados;
+	function sQuery()  // constructor, solo crea una conexion usando la clase "Conexion"
+	{
+		$this->pconeccion= new Conexion();
+	}
+	function executeQuery($cons)  // metodo que ejecuta una consulta y la guarda en el atributo $pconsulta
+	{
+		$this->pconsulta= mysql_query($cons,$this->pconeccion->getConexion());
+		return $this->pconsulta;
+	}	
+	function getResults()   // retorna la consulta en forma de result.
+	{return $this->pconsulta;}	
+	
+	function Close()		// cierra la conexion
+	{$this->pconeccion->Close();}	
+	
+	function Clean() // libera la consulta
+	{mysql_free_result($this->pconsulta);}
+	
+	function getResultados() // debuelve la cantidad de registros encontrados
+	{return mysql_affected_rows($this->pconeccion->getConexion()) ;}
+	
+	function getAffect() // devuelve las cantidad de filas afectadas
+	{return mysql_affected_rows($this->pconeccion->getConexion()) ;}
+}
+
+
+
+
+class Alumno
+{
+	var $nombrealumno;     //se declaran los atributos de la clase, que son los atributos del cliente
+	var $apellidopaterno;
+	var $apellidomaterno;
+	var $numerocontrol;
+	var $grado;
+	var $grupo;
+	Var $id;
+	function Alumno($nro=0) 
+	{
+		if ($nro!=0)
+		{
+			$obj_alumno=new sQuery();
+			$result=$obj_alumno->executeQuery("select * from Alumnos where id = $nro");  
+			$row=mysql_fetch_array($result);
+			$this->id=$row['id'];
+			$this->nombrealumno=$row['nombrealumno'];
+			$this->apellidopaterno=$row['apellidopaterno'];
+			$this->apellidomaterno=$row['apellidomaterno'];
+			$this->numerocontrol=$row['numerocontrol'];
+			$this->grado=$row['grado'];
+			$this->grupo=$row['grupo'];
+		}
+	}
+	function getAlumnos() // este metodo podria no estar en esta clase, se incluye para simplificar el codigo, lo que hace es traer todos los clientes 
+		{
+			$obj_alumno=new sQuery();
+			$result=$obj_alumno->executeQuery("select * from Alumnos ORDER BY numerocontrol DESC");
+			return $result; // retorna todos los alumnos
+		}
+		
+		// metodos que devuelven valores
+	function getID()
+	 { return $this->id;}
+	function getNombreAlumno()
+	 { return $this->nombrealumno;}
+	function getApellidoPaterno()
+	 { return $this->apellidopaterno;}
+	function getApellidoMaterno()
+         { return $this->apellidomaterno;}
+	function getNumeroControl()
+         { return $this->numerocontrol;}
+	function getGrado()
+         { return $this->grado;}
+	function getGrupo()
+         { return $this->grupo;}
+
+	 
+		// metodos que setean los valores
+	function setNombreAlumno($val)
+	 { $this->nombrealumno=$val;}
+ 	function setApellidoPaterno($val)
+         {  $this->apellidopaterno=$val;}
+	function setApellidoMaterno($val)
+         {  $this->apellidomaterno=$val;}
+	function setNumeroControl($val)
+	 {  $this->numerocontrol=$val;}
+	function setGrado($val)
+         {  $this->grado=$val;}
+	function setGrupo($val)
+         {  $this->grupo=$val;}
+
+
+	function updateAlumno()	// actualiza el cliente cargado en los atributos
+	{
+			$obj_alumno=new sQuery();
+			$query="UPDATE Alumnos set nombrealumno='$this->nombrealumno', apellidopaterno='$this->apellidopaterno', apellidomaterno='$this->apellidomaterno', numerocontrol='$this->numerocontrol', grado='$this->grado', grupo='$this->grupo' where id = $this->id";
+			$obj_alumno->executeQuery($query); // ejecuta la consulta para traer al alumno
+			return $query .'<br/>Registros afectados: '.$obj_alumno->getAffect(); // retorna todos los registros afectados
+	
+	}
+	function insertAlumno()	// inserta el alumno cargado en los atributos
+	{
+			$obj_alumno=new sQuery();
+			$query="INSERT INTO Alumnos(
+			nombrealumno, 
+			apellidopaterno,
+			apellidomaterno,
+			numerocontrol,
+			grado,
+			grupo
+			)
+			VALUES(
+			'$this->nombrealumno',
+			'$this->apellidopaterno',
+			'$this->apellidomaterno',
+			'$this->numerocontrol',
+			'$this->grado',
+			'$this->grupo'			
+			)";
+			
+			$obj_alumno->executeQuery($query); // ejecuta la consulta para traer al alumno
+			return $query .'<br/>Registros afectados: '.$obj_alumno->getAffect(); // retorna todos los registros afectados
+
+			
+			//$obj_alumno=new sQuery();
+
+			$ultimoid = mysql_insert_id($obj_alumno);
+			echo $ultimoid;
+	
+
+	
+	}	
+	
+	
+	//Insertar para la modificacion de documentos
+	
+	function insertSistema()	// inserta el alumno cargado en los atributos
+	{
+			$obj_alumno=new sQuery();
+			//Consulta -> INSERT INTO Doctos (idAlumno) SELECT id FROM Alumnos;
+			$querymia="INSERT INTO Doctos(idAlumno) SELECT id FROM Alumnos WHERE Alumnos.id = '$this->id'";
+			
+			$obj_alumno->executeQuery($querymia); // ejecuta la consulta para traer al alumno
+			return $query .'<br/>Registros afectados: '.$obj_alumno->getAffect(); // retorna todos los registros afectados
+	
+	}	
+	
+	function deleteAlumno($val)	// elimina el alumno
+	{
+			$obj_alumno=new sQuery();
+			$query="DELETE FROM Alumnos WHERE id=$val";
+			$obj_alumno->executeQuery($query); // ejecuta la consulta para  borrar el alumno
+			return $query .'<br/>Registros afectados: '.$obj_alumno->getAffect(); // retorna todos los registros afectados
+	
+	}	
+	
+	
+	
+}
+
+
+?>
