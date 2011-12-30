@@ -1,3 +1,4 @@
 *~
 config.php
 tmp/
+.DS_Store
